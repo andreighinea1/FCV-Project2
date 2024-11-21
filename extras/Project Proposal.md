@@ -40,8 +40,15 @@ After preprocessing, the system applies the following steps to enhance the docum
 ## **3. Implementation Details**
 
 - **Languages and Tools**: Python 3.x with OpenCV for image processing, and NumPy for computations.
-- **Input Requirements**: Images of documents on a contrasting surface with all edges visible, including varying
-  lighting conditions.
+- **Input Requirements**:
+    - **Source of Images**: Images will be captured using a smartphone camera or scanned from printed/handwritten
+      documents. The dataset will include self-captured images.
+    - **Image Constraints**:
+        - The document should be fully visible in the image, ideally covering an A4-sized sheet or smaller.
+        - The document should be placed on a contrasting background to enhance edge detection.
+        - Images should have adequate resolution (minimum 300 DPI for scanned documents or 8 MP for camera-captured
+          images).
+        - Avoid extreme angles; the document should be roughly parallel to the camera lens.
 - **Output**: Enhanced, cleaned images with text highlighted and backgrounds removed, saved in grayscale or binarized
   formats.
 
@@ -97,8 +104,8 @@ The following contributions will be part of my implementation for this project:
 7. **Background Removal**
     - **My Contribution**: Develop a pipeline to remove backgrounds by combining adaptive thresholding with
       morphological operations to isolate and highlight text regions.
-    - **Library Functions**: Use OpenCV's `cv2.adaptiveThreshold` for thresholding and `cv2.morphologyEx` for
-      background cleaning.
+    - **Library Functions**: Use OpenCV's `cv2.adaptiveThreshold` for thresholding and `cv2.morphologyEx` for background
+      cleaning.
 
 8. **Text Highlighting**
     - **My Contribution**: Write a script to overlay bounding boxes or colored highlights around detected text regions
