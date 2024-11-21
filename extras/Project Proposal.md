@@ -30,9 +30,10 @@ After preprocessing, the system applies the following steps to enhance the docum
 
 1. **Perspective Correction**: Corrects skew caused by camera angles by detecting paper edges and applying a perspective
    transformation. Assumes the paper is fully visible and placed on a contrasting background.
-2. **Background Removal**: Eliminates the paper background while preserving text clarity using adaptive thresholding and
-   morphological operations.
-3. **Text Highlighting**: Marks text regions with overlays or bounding boxes to enhance visibility.
+2. **Background Removal**: Remove uneven backgrounds while preserving text clarity using adaptive thresholding and
+   morphological operations. This process isolates text regions and ensures the output is a clean, binarized image.
+3. **Text Detection and Highlighting**: Detect text regions using contour-based methods and filter based on geometric
+   constraints. Highlight detected text using bounding boxes or overlays for better readability and digitization.
 4. **Edge Enhancement**: Sharpens faint text edges using filters like Sobel or Laplacian for improved clarity.
 
 ---
@@ -102,13 +103,29 @@ The following contributions will be part of my implementation for this project:
       transformation.
 
 7. **Background Removal**
-    - **My Contribution**: Develop a pipeline to remove backgrounds by combining adaptive thresholding with
-      morphological operations to isolate and highlight text regions.
-    - **Library Functions**: Use OpenCV's `cv2.adaptiveThreshold` for thresholding and `cv2.morphologyEx` for background
-      cleaning.
+    - **My Contribution**: Implement a pipeline combining adaptive thresholding and morphological operations to
+      eliminate uneven backgrounds while preserving text clarity. Write custom functions to identify and remove noise or
+      faint background artifacts.
+    - **Library Functions**: Use OpenCV's `cv2.adaptiveThreshold` for binarization and `cv2.morphologyEx` for cleanup.
+    - **Possible Improvements**:
+        - Use edge detection (`cv2.Canny`) to highlight abrupt intensity transitions between text and the background,
+          enhancing separation.
+        - Experiment with gradient-based segmentation (`cv2.Sobel`) to identify faint text regions and reduce false
+          negatives.
+        - Integrate a local histogram equalization step (`cv2.equalizeHist`) to improve text contrast in challenging
+          conditions.
 
-8. **Text Highlighting**
-    - **My Contribution**: Write a script to overlay bounding boxes or colored highlights around detected text regions
-      by analyzing contours and bounding rectangles.
-    - **Library Functions**: Use OpenCV's `cv2.boundingRect` and `cv2.drawContours` for text region detection and
-      visualization.
+8. **Text Detection and Highlighting**
+    - **My Contribution**: Implement contour-based text detection to identify text regions and filter based on size,
+      aspect ratio, and stroke consistency. Develop merging logic to ensure fragmented text regions are captured
+      cohesively.
+    - **Library Functions**: Use OpenCV's `cv2.findContours` for region detection and `cv2.boundingRect` for creating
+      bounding boxes.
+    - **Possible Improvements**:
+        - Preprocess with edge detection (`cv2.Canny`) or gradient analysis (`cv2.Sobel`) to improve text visibility
+          before contour detection.
+        - Employ connected component analysis (`cv2.connectedComponentsWithStats`) for enhanced robustness in noisy
+          environments.
+        - Use rotated bounding boxes (`cv2.minAreaRect`) for detecting angled or skewed text regions.
+        - Introduce proximity-based merging of fragmented text components to ensure complete words or lines are
+          captured.
