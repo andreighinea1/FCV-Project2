@@ -53,3 +53,55 @@ After preprocessing, the system applies the following steps to enhance the docum
 - Remove uneven backgrounds while maintaining readability.
 - Correct camera-induced skew for better alignment.
 - Provide digitized outputs suitable for archiving or analysis.
+
+---
+
+## **5. Contributions**
+
+The following contributions will be part of my implementation for this project:
+
+1. **Noise Reduction**
+    - **My Contribution**: Implement custom noise reduction filters based on Gaussian kernels to smooth images.
+      Fine-tune parameters like kernel size to balance text clarity and background removal.
+    - **Library Functions**: Use OpenCV's `cv2.GaussianBlur` and `cv2.fastNlMeansDenoising` for implementing the
+      filters.
+
+2. **Contrast Adjustment**
+    - **My Contribution**: Develop a script to enhance local contrast by computing the histogram of pixel intensities
+      and applying contrast stretching.
+    - **Library Functions**: Use NumPy for histogram calculations and intensity scaling.
+
+3. **Binarization**
+    - **My Contribution**: Experiment with different thresholding methods (adaptive and Otsu) to select the most
+      effective one for varying lighting conditions.
+    - **Library Functions**: Implement using OpenCV's `cv2.adaptiveThreshold` and `cv2.threshold` for comparison and
+      optimization.
+
+4. **Morphological Filtering**
+    - **My Contribution**: Design a process for using dilation and erosion to clean text regions and connect fragmented
+      text. Create custom kernel shapes for specific document types.
+    - **Library Functions**: Use OpenCV's `cv2.morphologyEx` with pre-defined operations like `cv2.MORPH_CLOSE` and
+      `cv2.MORPH_OPEN`.
+
+5. **Gradient Analysis**
+    - **My Contribution**: Implement gradient-based text segmentation using Sobel operators to identify text edges and
+      boundaries. Test combinations of gradients in different directions to refine results.
+    - **Library Functions**: Use OpenCV's `cv2.Sobel` and `cv2.Laplacian` for gradient calculation.
+
+6. **Perspective Correction**
+    - **My Contribution**: Write a function to detect paper edges using contour detection and apply perspective
+      transformation based on the detected quadrilateral.
+    - **Library Functions**: Use OpenCV's `cv2.findContours` for edge detection and `cv2.getPerspectiveTransform` for
+      transformation.
+
+7. **Background Removal**
+    - **My Contribution**: Develop a pipeline to remove backgrounds by combining adaptive thresholding with
+      morphological operations to isolate and highlight text regions.
+    - **Library Functions**: Use OpenCV's `cv2.adaptiveThreshold` for thresholding and `cv2.morphologyEx` for
+      background cleaning.
+
+8. **Text Highlighting**
+    - **My Contribution**: Write a script to overlay bounding boxes or colored highlights around detected text regions
+      by analyzing contours and bounding rectangles.
+    - **Library Functions**: Use OpenCV's `cv2.boundingRect` and `cv2.drawContours` for text region detection and
+      visualization.
