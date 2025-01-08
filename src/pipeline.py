@@ -27,25 +27,31 @@ def process_image(input_path, output_dir, debug=False):
 
     # Step 1: Noise Reduction
     noise_reducer = NoiseReducer(debug=debug)
-    image = noise_reducer.apply_gaussian_blur(image, step_name="noise_reduction")
+    image = noise_reducer.apply_gaussian_blur(
+        image, step_number=1, step_name="noise_reduction"
+    )
 
     # Step 2: Contrast Adjustment
     contrast_adjuster = ContrastAdjuster(debug=debug)
-    image = contrast_adjuster.adjust_contrast(image, step_name="contrast_adjustment")
+    image = contrast_adjuster.adjust_contrast(
+        image, step_number=2, step_name="contrast_adjustment"
+    )
 
     # Step 3: Binarization
     binarizer = Binarizer(debug=debug)
-    image = binarizer.apply_threshold(image, step_name="binarization")
+    image = binarizer.apply_threshold(image, step_number=3, step_name="binarization")
 
     # Step 4: Morphological Filtering
     morphological_filter = MorphologicalFilter(debug=debug)
     image = morphological_filter.apply_morphology(
-        image, step_name="morphological_filtering"
+        image, step_number=4, step_name="morphological_filtering"
     )
 
     # Step 5: Gradient Analysis
     gradient_analyzer = GradientAnalyzer(debug=debug)
-    image = gradient_analyzer.compute_gradients(image, step_name="gradient_analysis")
+    image = gradient_analyzer.compute_gradients(
+        image, step_number=5, step_name="gradient_analysis"
+    )
 
     # Save the final processed image
     final_output_path = os.path.join(output_dir, "final_processed_image.png")

@@ -7,12 +7,13 @@ class GradientAnalyzer(Preprocessor):
     def __init__(self, debug=False, debug_dir="data/debug"):
         super().__init__(debug, debug_dir)
 
-    def compute_gradients(self, image, step_name="gradient_analysis"):
+    def compute_gradients(self, image, step_number=1, step_name="gradient_analysis"):
         """
         Compute image gradients using Sobel operators.
 
         Args:
             image: Input image as a numpy array.
+            step_number: Count of the debug step.
             step_name: Name for the debug step.
 
         Returns:
@@ -25,5 +26,6 @@ class GradientAnalyzer(Preprocessor):
         grad_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=3)
         magnitude = cv2.magnitude(grad_x, grad_y)
         normalized_magnitude = cv2.normalize(magnitude, None, 0, 255, cv2.NORM_MINMAX)
-        self.save_debug_image(normalized_magnitude.astype("uint8"), step_name)
-        return normalized_magnitude.astype("uint8")
+        normalized_magnitude = normalized_magnitude.astype("uint8")
+        self.save_debug_image(normalized_magnitude, step_name, step_number)
+        return normalized_magnitude

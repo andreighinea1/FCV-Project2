@@ -7,12 +7,13 @@ class Binarizer(Preprocessor):
     def __init__(self, debug=False, debug_dir="data/debug"):
         super().__init__(debug, debug_dir)
 
-    def apply_threshold(self, image, step_name="binarization"):
+    def apply_threshold(self, image, step_number=1, step_name="binarization"):
         """
         Apply adaptive thresholding to binarize the image.
 
         Args:
             image: Input image as a numpy array.
+            step_number: Count of the debug step.
             step_name: Name for the debug step.
 
         Returns:
@@ -22,12 +23,7 @@ class Binarizer(Preprocessor):
             image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         binarized_image = cv2.adaptiveThreshold(
-            image,
-            255,
-            cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-            cv2.THRESH_BINARY,
-            11,
-            2
+            image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
         )
-        self.save_debug_image(binarized_image, step_name)
+        self.save_debug_image(binarized_image, step_name, step_number)
         return binarized_image

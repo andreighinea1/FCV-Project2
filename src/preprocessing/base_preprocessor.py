@@ -17,14 +17,15 @@ class Preprocessor:
         if self.debug:
             os.makedirs(self.debug_dir, exist_ok=True)
 
-    def save_debug_image(self, image, step_name):
+    def save_debug_image(self, image, step_name, step_number):
         """
         Save an intermediate image if debug mode is enabled.
 
         Args:
             image: The image to save.
             step_name: Name for the debug step.
+            step_number: Step count in the pipeline.
         """
         if self.debug:
-            debug_path = os.path.join(self.debug_dir, f"intermediate_{step_name}.png")
+            debug_path = os.path.join(self.debug_dir, f"{step_number}_{step_name}.png")
             save_image(image, debug_path)
