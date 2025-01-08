@@ -1,5 +1,6 @@
 import logging
 import os
+import shutil
 
 from src.pipeline import process_image
 from src.utils.io_operations import ensure_directory
@@ -14,12 +15,35 @@ if __name__ == "__main__":
     # Define input and output directories
     input_dir = "data/input"
     output_dir = "data/output"
+    debug_dir = "data/debug"
 
     # Debug mode flag
     debug_mode = True
 
-    # Ensure output directory exists
+    # Remove the debug directory if it exists
+    if os.path.exists(debug_dir):
+        logging.info(f"Removing existing debug directory: {debug_dir}")
+        shutil.rmtree(debug_dir)
+
+    # Check if output directory exists and contains files
+    if os.path.exists(output_dir) and os.listdir(output_dir):
+        user_input = (
+            input(
+                f"The output directory '{output_dir}' is not empty. Do you want to remove it? (y/n): "
+            )
+            .strip()
+            .lower()
+        )
+        if user_input == "y":
+            logging.info(f"Removing output directory: {output_dir}")
+            shutil.rmtree(output_dir)
+        else:
+            logging.error(f"Output directory '{output_dir}' must be empty to start.")
+            exit(1)
+
+    # Recreate the output and debug directories
     ensure_directory(output_dir)
+    ensure_directory(debug_dir)
 
     # Get all files in the input directory
     input_files = [
