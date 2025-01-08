@@ -28,9 +28,7 @@ class DocumentDetector(Preprocessor):
         self.save_debug_image(edges, f"{step_name}_edges", step_number)
 
         # Find contours
-        contours, _ = cv2.findContours(
-            edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-        )
+        contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         contours = sorted(contours, key=cv2.contourArea, reverse=True)[:5]
 
         # Find the largest quadrilateral
@@ -44,6 +42,11 @@ class DocumentDetector(Preprocessor):
 
         if page_contour is None:
             raise ValueError("No quadrilateral detected in the image.")
+
+        # Draw the detected quadrilateral on the original image for debugging
+        debug_image = image.copy()
+        cv2.drawContours(debug_image, [page_contour], -1, (0, 255, 0), 5)  # Green outline
+        self.save_debug_image(debug_image, f"{step_name}_outline", step_number)
 
         # Warp perspective
         pts = page_contour.reshape(4, 2)
