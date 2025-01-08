@@ -2,6 +2,7 @@ import logging
 import os
 
 from src.pipeline import process_image
+from src.utils.io_operations import ensure_directory
 
 if __name__ == "__main__":
     logging.basicConfig(
@@ -17,8 +18,8 @@ if __name__ == "__main__":
     # Debug mode flag
     debug_mode = True
 
-    # Ensure the output directory exists
-    os.makedirs(output_dir, exist_ok=True)
+    # Ensure output directory exists
+    ensure_directory(output_dir)
 
     # Get all files in the input directory
     input_files = [
