@@ -3,6 +3,7 @@ import os
 
 from src.preprocessing.binarization import Binarizer
 from src.preprocessing.contrast_adjustment import ContrastAdjuster
+from src.preprocessing.document_detection import DocumentDetector
 from src.preprocessing.gradient_analysis import GradientAnalyzer
 from src.preprocessing.morphological_filtering import MorphologicalFilter
 from src.preprocessing.noise_reduction import NoiseReducer
@@ -27,6 +28,12 @@ def process_image(input_path, output_dir, debug=False):
     debug_dir = os.path.join("data", "debug", image_name)
     if debug:
         ensure_directory(debug_dir)
+
+    # Step 0: Document Detection
+    document_detector = DocumentDetector(debug=debug, debug_dir=debug_dir)
+    image = document_detector.detect_and_warp(
+        image, step_number=0, step_name="document_detection"
+    )
 
     # Step 1: Noise Reduction
     noise_reducer = NoiseReducer(debug=debug, debug_dir=debug_dir)
