@@ -20,10 +20,18 @@ if __name__ == "__main__":
     # Ensure the output directory exists
     os.makedirs(output_dir, exist_ok=True)
 
-    # Process all images in the input directory
-    for filename in os.listdir(input_dir):
-        input_path = os.path.join(input_dir, filename)
-        if os.path.isfile(input_path):
+    # Get all files in the input directory
+    input_files = [
+        f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))
+    ]
+
+    # Check if there are no files to process
+    if not input_files:
+        logging.info("No files detected in the input directory!")
+    else:
+        # Process all images in the input directory
+        for filename in input_files:
+            input_path = os.path.join(input_dir, filename)
             logging.info(f"Processing {input_path}...")
             try:
                 process_image(input_path, output_dir, debug=debug_mode)
