@@ -29,7 +29,7 @@ class DocumentDetector(Preprocessor):
 
         # Step 2: Threshold the lightness channel to isolate white areas
         # Adjust min value as needed
-        _, mask = cv2.threshold(l, 170, 255, cv2.THRESH_BINARY)
+        _, mask = cv2.threshold(l, 150, 255, cv2.THRESH_BINARY)
         self.save_debug_image(mask, f"{step_name}_white_mask", step_number)
 
         # Step 3: Apply morphological operations to consolidate white regions
@@ -51,32 +51,52 @@ class DocumentDetector(Preprocessor):
         # Draw the largest contour for debugging, with green
         debug_image_contour = image.copy()
         cv2.drawContours(debug_image_contour, [largest_contour], -1, (0, 255, 0), 3)
-        self.save_debug_image(debug_image_contour, f"{step_name}_largest_contour", step_number)
+        self.save_debug_image(
+            debug_image_contour, f"{step_name}_largest_contour", step_number
+        )
 
-        # Fit a minimum area rectangle
-        rect = cv2.minAreaRect(largest_contour)
-        box = cv2.boxPoints(rect)  # Get four corners of the rectangle
-        box = np.array(box, dtype=int)  # Convert to integer type
+        # Step 6: Approximate a quadrilateral from the contour
+        perimeter = cv2.arcLength(largest_contour, True)
+        epsilon = 0.02 * perimeter  # Adjust this value if needed
+        approx = cv2.approxPolyDP(largest_contour, epsilon, True)
 
-        # Draw the rectangle for debugging, with green
-        debug_image = image.copy()
-        cv2.drawContours(debug_image, [box], -1, (0, 255, 0), 3)
-        self.save_debug_image(debug_image, f"{step_name}_min_area_rect", step_number)
+        if len(approx) == 4:  # Valid quadrilateral found
+            quad = approx.reshape(4, 2)
+        else:  # Fallback to minimum area rectangle
+            rect = cv2.minAreaRect(largest_contour)
+            quad = cv2.boxPoints(rect)
+            quad = np.array(quad, dtype=int)
 
-        # Refine the rectangle
-        aspect_ratio = max(rect[1]) / min(rect[1])
-        if aspect_ratio < 1.0:
-            aspect_ratio = 1 / aspect_ratio
+        # Draw the approximated quadrilateral for debugging, in blue
+        debug_image_quad = image.copy()
+        cv2.drawContours(debug_image_quad, [np.int32(quad)], -1, (255, 0, 0), 3)
+        self.save_debug_image(
+            debug_image_quad, f"{step_name}_approximated_quad", step_number
+        )
 
-        if aspect_ratio > 1.8 or aspect_ratio < 1.2:  # Check for A4-like aspect ratio
-            raise ValueError("Detected rectangle does not resemble a document.")
-
-        # Step 6: Warp perspective
+        # Step 7: Warp perspective using the quadrilateral
+        rect = self.order_points(quad)  # Order the points consistently
         dst = np.array(
             [[0, 0], [2480, 0], [2480, 3508], [0, 3508]], dtype="float32"  # A4 size
         )
-        matrix = cv2.getPerspectiveTransform(np.float32(box), dst)
+        matrix = cv2.getPerspectiveTransform(rect, dst)
         warped = cv2.warpPerspective(image, matrix, (2480, 3508))
         self.save_debug_image(warped, f"{step_name}_warped", step_number)
 
         return warped
+
+    @staticmethod
+    def order_points(pts):
+        """
+        Order points in a consistent manner: top-left, top-right, bottom-right, bottom-left.
+        """
+        rect = np.zeros((4, 2), dtype="float32")
+        s = pts.sum(axis=1)
+        rect[0] = pts[np.argmin(s)]
+        rect[2] = pts[np.argmax(s)]
+
+        diff = np.diff(pts, axis=1)
+        rect[1] = pts[np.argmin(diff)]
+        rect[3] = pts[np.argmax(diff)]
+
+        return rect
