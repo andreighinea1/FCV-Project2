@@ -7,7 +7,7 @@ from src.preprocessing.document_detection import DocumentDetector
 from src.utils.io_operations import read_image, ensure_directory, save_image
 
 
-def process_image(input_path, output_dir, debug=False):
+def process_image(input_path, output_dir, debug=False, force_black_text=False):
     """
     Process a single image through all preprocessing steps.
 
@@ -15,6 +15,7 @@ def process_image(input_path, output_dir, debug=False):
         input_path: Path to the input image.
         output_dir: Directory to save processed results.
         debug: If True, saves intermediate results for debugging.
+        force_black_text: If True, replaces text color with black instead of keeping the original.
     """
     # Read input image
     logging.info(f"Reading image from {input_path}")
@@ -89,6 +90,15 @@ def process_image(input_path, output_dir, debug=False):
     logging.info("Filling in the whites of the image...")
     inverted_mask = cv2.bitwise_not(final_mask)
     text_img = cv2.bitwise_and(cropped_image, cropped_image, mask=inverted_mask)
+
+    # Optionally replace text with Obsidian black
+    if force_black_text:
+        logging.info("Replacing text with Obsidian black (#0B1215)...")
+        gray_text = cv2.cvtColor(text_img, cv2.COLOR_BGR2GRAY)
+        text_img = cv2.merge((gray_text, gray_text, gray_text))  # Grayscale text
+        # Replace all non-white pixels with Obsidian black
+        text_img[gray_text < 255] = [11, 18, 21]
+
     text_white_background = cv2.add(
         text_img, cv2.cvtColor(final_mask, cv2.COLOR_GRAY2BGR)
     )
