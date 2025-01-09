@@ -74,18 +74,8 @@ class DocumentDetector(Preprocessor):
             debug_image_quad, f"{step_name}_approximated_quad", step_number
         )
 
-        # Step 7: Refine the edges of the quadrilateral, and draw it in blue
-        refined_quad = self.refine_edges_with_mask(quad, eroded, min_white_ratio=0.5)
-        debug_image_refined = image.copy()
-        cv2.drawContours(
-            debug_image_refined, [np.int32(refined_quad)], -1, (255, 0, 0), 3
-        )
-        self.save_debug_image(
-            debug_image_refined, f"{step_name}_refined_quad", step_number
-        )
-
-        # Step 8: Warp perspective using the refined quadrilateral
-        rect = self.order_points(refined_quad)  # Order the points consistently
+        # Step 7: Warp perspective using the approximated quadrilateral
+        rect = self.order_points(quad)  # Order the points consistently
         dst = np.array(
             [[0, 0], [2480, 0], [2480, 3508], [0, 3508]], dtype="float32"  # A4 size
         )
@@ -94,54 +84,6 @@ class DocumentDetector(Preprocessor):
         self.save_debug_image(warped, f"{step_name}_warped", step_number)
 
         return warped
-
-    @staticmethod
-    def refine_edges_with_mask(quad, mask, min_white_ratio=0.5):
-        """
-        Refine the edges of the quadrilateral to better align with the white paper region.
-
-        Args:
-            quad: Initial quadrilateral vertices.
-            mask: Binary mask of the white paper region.
-            min_white_ratio: Minimum percentage of white pixels to satisfy.
-
-        Returns:
-            Refined quadrilateral vertices.
-        """
-        refined_quad = quad.copy()
-        height, width = mask.shape
-
-        for i in range(len(quad)):
-            p1 = quad[i]
-            p2 = quad[(i + 1) % len(quad)]  # Next point
-            direction = p2 - p1
-            norm = np.linalg.norm(direction)
-            direction = direction / norm if norm != 0 else direction
-
-            # Move the entire edge inward or outward
-            for offset in range(-10, 11):  # Test offsets from -10 to +10 pixels
-                edge_points = [
-                    np.clip(
-                        (p1 + direction * t + direction * offset),
-                        [0, 0],
-                        [width - 1, height - 1],
-                    ).astype(int)
-                    for t in range(0, int(norm), 5)  # Sample points along the edge
-                ]
-
-                # Check the percentage of white pixels along the edge
-                white_ratios = [
-                    np.sum(mask[y - 2 : y + 3, x - 2 : x + 3] == 255) / 25
-                    for x, y in edge_points
-                ]
-                average_white_ratio = np.mean(white_ratios)
-
-                if average_white_ratio >= min_white_ratio:
-                    # Adjust the points based on the offset
-                    refined_quad[i] = p1 + direction * offset
-                    break
-
-        return refined_quad
 
     @staticmethod
     def order_points(pts):
