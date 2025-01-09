@@ -1,3 +1,5 @@
+import logging
+
 import cv2
 import numpy as np
 
@@ -20,25 +22,28 @@ class DocumentDetector(Preprocessor):
         Returns:
             Warped image with an A4 aspect ratio.
         """
-        # Step 1: Convert to grayscale
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        self.save_debug_image(gray, f"{step_name}_grayscale", step_number)
+        # Step 1: Convert to LAB color space to separate light regions
+        lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+        l, a, b = cv2.split(lab)
+        self.save_debug_image(l, f"{step_name}_lightness", step_number)
 
-        # Step 2: Apply Gaussian blur to suppress noise
-        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-        self.save_debug_image(blurred, f"{step_name}_blurred", step_number)
+        # Step 2: Threshold the lightness channel to isolate white areas
+        # Adjust min value as needed
+        _, mask = cv2.threshold(l, 150, 255, cv2.THRESH_BINARY)
+        self.save_debug_image(mask, f"{step_name}_white_mask", step_number)
 
-        # Step 3: Adaptive thresholding for better separation of foreground and background
-        thresholded = cv2.adaptiveThreshold(
-            blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2
-        )
-        self.save_debug_image(thresholded, f"{step_name}_thresholded", step_number)
+        # Step 3: Apply morphological operations to consolidate white regions
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+        dilated = cv2.dilate(mask, kernel, iterations=2)
+        eroded = cv2.erode(dilated, kernel, iterations=2)
+        self.save_debug_image(eroded, f"{step_name}_morphology", step_number)
 
-        # Step 4: Find contours
+        # Step 4: Find contours in the white mask
         contours, _ = cv2.findContours(
-            thresholded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+            eroded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
         )
         contours = sorted(contours, key=cv2.contourArea, reverse=True)
+        logging.info(f"Found {len(contours)} contours")
 
         # Step 5: Find the largest contour that resembles a quadrilateral
         page_contour = None
@@ -50,8 +55,8 @@ class DocumentDetector(Preprocessor):
                 _, _, w, h = cv2.boundingRect(approx)
                 aspect_ratio = max(w, h) / min(w, h)
 
-                # Adjust thresholds
-                if area > 0.5 * gray.size and 1.3 < aspect_ratio < 1.8:
+                # Adjust thresholds for size and aspect ratio
+                if area > 0.5 * image.size and 1.3 < aspect_ratio < 1.8:
                     page_contour = approx
                     break
 
