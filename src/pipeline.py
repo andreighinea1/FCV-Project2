@@ -7,7 +7,13 @@ from src.preprocessing.document_detection import DocumentDetector
 from src.utils.io_operations import read_image, ensure_directory, save_image
 
 
-def process_image(input_path, output_dir, debug=False, force_black_text=False):
+def process_image(
+    input_path,
+    output_dir,
+    debug=False,
+    force_black_text=False,
+    highlight_text_regions=False,
+):
     """
     Process a single image through all preprocessing steps.
 
@@ -16,6 +22,7 @@ def process_image(input_path, output_dir, debug=False, force_black_text=False):
         output_dir: Directory to save processed results.
         debug: If True, saves intermediate results for debugging.
         force_black_text: If True, replaces text color with black instead of keeping the original.
+        highlight_text_regions: If True, it highlights text regions.
     """
     # Read input image
     logging.info(f"Reading image from {input_path}")
@@ -117,7 +124,42 @@ def process_image(input_path, output_dir, debug=False, force_black_text=False):
         )
     inside_step += 1
 
+    # Step 9: Detect and highlight text regions (if enabled)
+    highlighted = blurred
+    if highlight_text_regions:
+        logging.info("Detecting and highlighting text regions...")
+
+        # Use connected component analysis for text detection
+        num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(
+            inverted_mask, connectivity=8
+        )
+
+        # Filtering parameters
+        min_area = 100  # Minimum area for text regions
+        max_area = 0.1 * inverted_mask.size  # Maximum area for text regions (10% of image)
+
+        # Draw bounding boxes on the final image
+        for i in range(1, num_labels):  # Skip the background (label 0)
+            x, y, w, h, area = (
+                stats[i, cv2.CC_STAT_LEFT],
+                stats[i, cv2.CC_STAT_TOP],
+                stats[i, cv2.CC_STAT_WIDTH],
+                stats[i, cv2.CC_STAT_HEIGHT],
+                stats[i, cv2.CC_STAT_AREA],
+            )
+
+            # Apply filtering criteria
+            if min_area <= area <= max_area:
+                # Draw the bounding box on the blurred image
+                cv2.rectangle(highlighted, (x, y), (x + w, y + h), (0, 255, 0), 2)
+    if debug:
+        save_image(
+            highlighted, os.path.join(debug_dir, f"{inside_step}_highlighted.png")
+        )
+    inside_step += 1
+    final_image = highlighted
+
     # Save the final result
     final_output_path = os.path.join(output_dir, f"{image_name}_processed_cropped.png")
-    save_image(blurred, final_output_path)
+    save_image(final_image, final_output_path)
     logging.info(f"Processed cropped image saved at {final_output_path}")

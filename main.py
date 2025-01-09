@@ -39,14 +39,19 @@ def parse_arguments():
         help="Enable debug mode to save intermediate results.",
     )
     parser.add_argument(
+        "--bypass",
+        action="store_true",
+        help="Automatically bypass prompts for removing non-empty directories.",
+    )
+    parser.add_argument(
         "--force_black_text",
         action="store_true",
         help="Force the text in the document to appear black (e.g., #0B1215).",
     )
     parser.add_argument(
-        "--bypass",
+        "--highlight_text_regions",
         action="store_true",
-        help="Automatically bypass prompts for removing non-empty directories.",
+        help="Highlight detected text regions with bounding boxes.",
     )
     return parser.parse_args()
 
@@ -115,6 +120,7 @@ if __name__ == "__main__":
                     output_dir,
                     debug=debug_mode,
                     force_black_text=args.force_black_text,
+                    highlight_text_regions=args.highlight_text_regions,
                 )
             except Exception as e:
                 logging.error(f"Error processing {input_path}: {e}")
