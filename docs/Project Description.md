@@ -100,7 +100,105 @@ outputs suitable for digitization and analysis.
 
 ## **6. Example Outputs**
 
-<INSTRUCTION>Please give me the format for how to add images in the markdown file, and I'll add the images myself. And
-make the format like to first list the input images and show them, and in a different section show the results with and
-without --highlight_text_regions, another with and without the --force_black_text, and then another with all the final
-results which would have 2 subsubsections for both failed and good results.</INSTRUCTION>
+### **6.1 Input Images**
+
+#### **BLITZ_UP_CLEAN**
+
+![BLITZ_UP_CLEAN](../data/input/BLITZ_UP_CLEAN.jpg)  
+Captured with a blitz (flash) in an upright orientation. The document appears clean, with no significant shadows.
+
+#### **BLITZ_UP_SHADOW**
+
+![BLITZ_UP_SHADOW](../data/input/BLITZ_UP_SHADOW.jpg)  
+Taken with a blitz (flash) in an upright orientation. The document contains visible shadows likely caused by uneven
+lighting or object interference.
+
+#### **BRIGHT_LEFT_SHADOW**
+
+![BRIGHT_LEFT_SHADOW](../data/input/BRIGHT_LEFT_SHADOW.jpg)  
+Photographed with bright ambient lighting from the left side. Shadows are present, likely due to uneven light
+distribution.
+
+#### **NATURAL_DOWN_SHADOW**
+
+![NATURAL_DOWN_SHADOW](../data/input/NATURAL_DOWN_SHADOW.jpg)  
+Captured using natural light coming from above. Shadows are noticeable, impacting the visibility of some parts of the
+document.
+
+#### **NATURAL_UP_CLEAN**
+
+![NATURAL_UP_CLEAN](../data/input/NATURAL_UP_CLEAN.jpg)  
+Taken in natural light in an upright orientation. The document appears clean, with no significant shadows or
+distortions.
+
+#### **RIGHT_CLEAN**
+
+![RIGHT_CLEAN](../data/input/RIGHT_CLEAN.jpg)  
+Captured with the light source on the right. The document is clean, with no visible shadows or lighting issues.
+
+### **6.2 Processed Outputs**
+
+#### **Without `--highlight_text_regions` and `--force_black_text`**
+
+![BLITZ_UP_CLEAN_processed_simple](../data/saved_outputs/BLITZ_UP_CLEAN_processed_simple.png)
+These images display the processed output with no text highlighting or text blackening applied. This shows the baseline
+pipeline results focused solely on cleaning and enhancing the document background.
+
+#### **With `--highlight_text_regions` and `--force_black_text`**
+
+![BLITZ_UP_CLEAN_processed_all](../data/saved_outputs/BLITZ_UP_CLEAN_processed_all.png)
+These images demonstrate the pipeline's advanced functionalities, including text highlighting with bounding boxes and
+replacing text color with Obsidian Black (#0B1215). This comparison highlights the visual impact of these features.
+
+#### **Final Results**
+
+#### **Final Results**
+
+##### **Successful Cases**
+
+###### **BLITZ_UP_CLEAN_processed_cropped**
+
+![BLITZ_UP_CLEAN_processed_cropped](../data/saved_outputs/success/BLITZ_UP_CLEAN_processed_cropped.png)  
+**Description**: Captured with a flash (BLITZ), upright (UP) orientation, and clean (CLEAN) background. The pipeline
+successfully enhanced the image, removed background noise, and preserved document clarity.
+
+###### **BLITZ_UP_SHADOW_processed_cropped**
+
+![BLITZ_UP_SHADOW_processed_cropped](../data/saved_outputs/success/BLITZ_UP_SHADOW_processed_cropped.png)  
+**Description**: Captured with a flash (BLITZ), upright (UP) orientation, and containing shadows (SHADOW). The pipeline
+managed to enhance the text regions despite the shadowed areas.
+
+###### **NATURAL_DOWN_SHADOW_processed_cropped**
+
+![NATURAL_DOWN_SHADOW_processed_cropped](../data/saved_outputs/success/NATURAL_DOWN_SHADOW_processed_cropped.png)  
+**Description**: Captured under natural light (NATURAL), in a downward (DOWN) orientation, and with shadows (SHADOW).
+The pipeline effectively processed the text while minimizing the impact of uneven lighting.
+
+###### **NATURAL_UP_CLEAN_processed_cropped**
+
+![NATURAL_UP_CLEAN_processed_cropped](../data/saved_outputs/success/NATURAL_UP_CLEAN_processed_cropped.png)  
+**Description**: Captured under natural light (NATURAL), upright (UP) orientation, and clean (CLEAN) background. The
+pipeline produced excellent results, removing noise and enhancing text clarity.
+
+##### **Failed Cases**
+
+###### **BRIGHT_LEFT_SHADOW_processed_cropped**
+
+![BRIGHT_LEFT_SHADOW_processed_cropped](../data/saved_outputs/failed/BRIGHT_LEFT_SHADOW_processed_cropped.png)  
+**Description**: Captured under bright light (BRIGHT), from the left (LEFT) orientation, and with shadows (SHADOW). The
+pipeline struggled with uneven lighting and shadow detection.
+
+###### **RIGHT_CLEAN_processed_cropped**
+
+![RIGHT_CLEAN_processed_cropped](../data/saved_outputs/failed/RIGHT_CLEAN_processed_cropped.png)  
+**Description**: Captured with a clean (CLEAN) background and a right (RIGHT) orientation. The pipeline failed to detect
+the document edges accurately, leading to suboptimal results.
+
+
+---
+
+## **7. Future Work**
+
+- Incorporate AI-based methods for document and text detection.
+- Enable multi-page document processing.
+- Add support for more complex input scenarios, such as curved documents.
