@@ -82,33 +82,11 @@ def process_image(input_path, output_dir, debug=False):
             closed_mask, os.path.join(debug_dir, f"{inside_step}_morph_closing.png")
         )
     inside_step += 1
-
-    # Step 7: Remove small black dots using contour filtering
-    logging.info("Removing small black dots with contour filtering...")
-    contours, _ = cv2.findContours(
-        closed_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-    )
-
-    # Adaptive area threshold: 0.01% of total pixels
-    max_contour_area = int(0.0001 * closed_mask.size + 1)
-    logging.info(f"Adaptive area threshold: {max_contour_area} pixels")
-
-    # Filter contours by area
-    # filtered_mask = np.zeros_like(closed_mask)
-    for contour in contours:
-        if cv2.contourArea(contour) <= max_contour_area:
-            # cv2.drawContours(closed_mask, [contour], -1, 255, thickness=cv2.FILLED)
-            cv2.drawContours(closed_mask, [contour], -1, (0, 255, 0), thickness=cv2.FILLED)
-
-    if debug:
-        save_image(
-            closed_mask,
-            os.path.join(debug_dir, f"{inside_step}_contour_filtering.png"),
-        )
     final_mask = closed_mask
-    inside_step += 1
 
-    # Step 8: Use the resulting image as a mask to fill in the whites of the image
+    # Tried using connected components and contour filtering to remove black dots here, without succeeding...
+
+    # Step 7: Use the resulting image as a mask to fill in the whites of the image
     logging.info("Filling in the whites of the image...")
     filled_white = cv2.bitwise_and(cropped_image, cropped_image, mask=final_mask)
     inverted_mask = cv2.bitwise_not(final_mask)
