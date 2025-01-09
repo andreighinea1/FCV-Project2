@@ -51,11 +51,13 @@ def process_image(input_path, output_dir, debug=False):
         save_image(l, os.path.join(debug_dir, f"{inside_step}_lightness.png"))
     inside_step += 1
 
-    # Step 4: Threshold the lightness channel to isolate white areas
-    logging.info("Thresholding the lightness channel...")
-    _, mask = cv2.threshold(l, 150, 255, cv2.THRESH_BINARY)
+    # Step 4: Apply adaptive thresholding on the lightness channel
+    logging.info("Applying adaptive thresholding...")
+    adaptive_mask = cv2.adaptiveThreshold(
+        l, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, blockSize=21, C=10
+    )
     if debug:
-        save_image(mask, os.path.join(debug_dir, f"{inside_step}_white_mask.png"))
+        save_image(adaptive_mask, os.path.join(debug_dir, f"{inside_step}_adaptive_mask.png"))
     inside_step += 1
 
     # Step 5: Apply morphological operations to consolidate white regions

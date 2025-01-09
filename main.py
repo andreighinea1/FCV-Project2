@@ -6,6 +6,8 @@ from src.pipeline import process_image
 from src.utils.io_operations import ensure_directory
 
 if __name__ == "__main__":
+    BYPASS = True  # Assume user gives "y" input below
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s",
@@ -27,13 +29,16 @@ if __name__ == "__main__":
 
     # Check if output directory exists and contains files
     if os.path.exists(output_dir) and os.listdir(output_dir):
-        user_input = (
-            input(
-                f"The output directory '{output_dir}' is not empty. Do you want to remove it? (y/n): "
+        if BYPASS:
+            user_input = "y"
+        else:
+            user_input = (
+                input(
+                    f"The output directory '{output_dir}' is not empty. Do you want to remove it? (y/n): "
+                )
+                .strip()
+                .lower()
             )
-            .strip()
-            .lower()
-        )
         if user_input == "y":
             logging.info(f"Removing output directory: {output_dir}")
             shutil.rmtree(output_dir)
