@@ -45,53 +45,33 @@ class DocumentDetector(Preprocessor):
         contours = sorted(contours, key=cv2.contourArea, reverse=True)
         logging.info(f"Found {len(contours)} contours")
 
-        # Step 5: Find the largest contour that resembles a quadrilateral
-        page_contour = None
-        for contour in contours:
-            perimeter = cv2.arcLength(contour, True)
-            approx = cv2.approxPolyDP(contour, 0.02 * perimeter, True)
-            if len(approx) == 4:  # Looking for quadrilaterals
-                area = cv2.contourArea(approx)
-                _, _, w, h = cv2.boundingRect(approx)
-                aspect_ratio = max(w, h) / min(w, h)
+        # Step 5: Focus on the largest contour only
+        largest_contour = contours[0]
 
-                # Adjust thresholds for size and aspect ratio
-                if area > 0.5 * image.size and 1.3 < aspect_ratio < 1.8:
-                    page_contour = approx
-                    break
+        # Fit a minimum area rectangle
+        rect = cv2.minAreaRect(largest_contour)
+        box = cv2.boxPoints(rect)  # Get four corners of the rectangle
+        box = np.array(box, dtype=int)  # Convert to integer type
 
-        if page_contour is None:
-            raise ValueError("No valid quadrilateral detected in the image.")
-
-        # Draw the detected quadrilateral for debugging with a green outline
+        # Draw the rectangle for debugging
         debug_image = image.copy()
-        cv2.drawContours(debug_image, [page_contour], -1, (0, 255, 0), 5)
-        self.save_debug_image(debug_image, f"{step_name}_outline", step_number)
+        cv2.drawContours(debug_image, [box], -1, (0, 255, 0), 2)  # Green rectangle
+        self.save_debug_image(debug_image, f"{step_name}_min_area_rect", step_number)
+
+        # Refine the rectangle
+        aspect_ratio = max(rect[1]) / min(rect[1])
+        if aspect_ratio < 1.0:
+            aspect_ratio = 1 / aspect_ratio
+
+        if aspect_ratio > 1.8 or aspect_ratio < 1.2:  # Check for A4-like aspect ratio
+            raise ValueError("Detected rectangle does not resemble a document.")
 
         # Step 6: Warp perspective
-        pts = page_contour.reshape(4, 2)
-        rect = self.order_points(pts)
         dst = np.array(
             [[0, 0], [2480, 0], [2480, 3508], [0, 3508]], dtype="float32"  # A4 size
         )
-        matrix = cv2.getPerspectiveTransform(rect, dst)
+        matrix = cv2.getPerspectiveTransform(np.float32(box), dst)
         warped = cv2.warpPerspective(image, matrix, (2480, 3508))
         self.save_debug_image(warped, f"{step_name}_warped", step_number)
 
         return warped
-
-    @staticmethod
-    def order_points(pts):
-        """
-        Order points in a consistent manner: top-left, top-right, bottom-right, bottom-left.
-        """
-        rect = np.zeros((4, 2), dtype="float32")
-        s = pts.sum(axis=1)
-        rect[0] = pts[np.argmin(s)]
-        rect[2] = pts[np.argmax(s)]
-
-        diff = np.diff(pts, axis=1)
-        rect[1] = pts[np.argmin(diff)]
-        rect[3] = pts[np.argmax(diff)]
-
-        return rect
