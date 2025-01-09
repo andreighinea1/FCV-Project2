@@ -20,35 +20,50 @@ class DocumentDetector(Preprocessor):
         Returns:
             Warped image with an A4 aspect ratio.
         """
-        # Convert to grayscale
+        # Step 1: Convert to grayscale
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        self.save_debug_image(gray, f"{step_name}_grayscale", step_number)
 
-        # Edge detection
-        edges = cv2.Canny(gray, 50, 150)
-        self.save_debug_image(edges, f"{step_name}_edges", step_number)
+        # Step 2: Apply Gaussian blur to suppress noise
+        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+        self.save_debug_image(blurred, f"{step_name}_blurred", step_number)
 
-        # Find contours
-        contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        contours = sorted(contours, key=cv2.contourArea, reverse=True)[:5]
+        # Step 3: Adaptive thresholding for better separation of foreground and background
+        thresholded = cv2.adaptiveThreshold(
+            blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2
+        )
+        self.save_debug_image(thresholded, f"{step_name}_thresholded", step_number)
 
-        # Find the largest quadrilateral
+        # Step 4: Find contours
+        contours, _ = cv2.findContours(
+            thresholded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        )
+        contours = sorted(contours, key=cv2.contourArea, reverse=True)
+
+        # Step 5: Find the largest contour that resembles a quadrilateral
         page_contour = None
         for contour in contours:
             perimeter = cv2.arcLength(contour, True)
             approx = cv2.approxPolyDP(contour, 0.02 * perimeter, True)
-            if len(approx) == 4:
-                page_contour = approx
-                break
+            if len(approx) == 4:  # Looking for quadrilaterals
+                area = cv2.contourArea(approx)
+                _, _, w, h = cv2.boundingRect(approx)
+                aspect_ratio = max(w, h) / min(w, h)
+
+                # Adjust thresholds
+                if area > 0.5 * gray.size and 1.3 < aspect_ratio < 1.8:
+                    page_contour = approx
+                    break
 
         if page_contour is None:
-            raise ValueError("No quadrilateral detected in the image.")
+            raise ValueError("No valid quadrilateral detected in the image.")
 
-        # Draw the detected quadrilateral on the original image for debugging
+        # Draw the detected quadrilateral for debugging with a green outline
         debug_image = image.copy()
-        cv2.drawContours(debug_image, [page_contour], -1, (0, 255, 0), 5)  # Green outline
+        cv2.drawContours(debug_image, [page_contour], -1, (0, 255, 0), 5)
         self.save_debug_image(debug_image, f"{step_name}_outline", step_number)
 
-        # Warp perspective
+        # Step 6: Warp perspective
         pts = page_contour.reshape(4, 2)
         rect = self.order_points(pts)
         dst = np.array(
