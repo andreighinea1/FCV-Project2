@@ -2,7 +2,6 @@ import logging
 import os
 
 import cv2
-import numpy as np
 
 from src.preprocessing.document_detection import DocumentDetector
 from src.utils.io_operations import read_image, ensure_directory, save_image
@@ -88,18 +87,27 @@ def process_image(input_path, output_dir, debug=False):
 
     # Step 7: Use the resulting image as a mask to fill in the whites of the image
     logging.info("Filling in the whites of the image...")
-    filled_white = cv2.bitwise_and(cropped_image, cropped_image, mask=final_mask)
     inverted_mask = cv2.bitwise_not(final_mask)
-    white_background = cv2.add(
-        filled_white, cv2.cvtColor(inverted_mask, cv2.COLOR_GRAY2BGR)
+    text_img = cv2.bitwise_and(cropped_image, cropped_image, mask=inverted_mask)
+    text_white_background = cv2.add(
+        text_img, cv2.cvtColor(final_mask, cv2.COLOR_GRAY2BGR)
     )
     if debug:
         save_image(
-            white_background, os.path.join(debug_dir, f"{inside_step}_cleaned.png")
+            text_white_background, os.path.join(debug_dir, f"{inside_step}_cleaned.png")
+        )
+    inside_step += 1
+
+    # Step 8: More Noise Reduction
+    logging.info("Applying more noise reduction...")
+    blurred = cv2.GaussianBlur(text_white_background, (5, 5), 0)
+    if debug:
+        save_image(
+            blurred, os.path.join(debug_dir, f"{inside_step}_noise_reduction.png")
         )
     inside_step += 1
 
     # Save the final result
     final_output_path = os.path.join(output_dir, f"{image_name}_processed_cropped.png")
-    save_image(white_background, final_output_path)
+    save_image(blurred, final_output_path)
     logging.info(f"Processed cropped image saved at {final_output_path}")
