@@ -60,19 +60,27 @@ def process_image(input_path, output_dir, debug=False):
         save_image(adaptive_mask, os.path.join(debug_dir, f"{inside_step}_adaptive_mask.png"))
     inside_step += 1
 
-    # Step 5: Apply morphological operations to consolidate white regions
-    logging.info("Applying morphological operations...")
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-    dilated = cv2.dilate(mask, kernel, iterations=2)
-    eroded = cv2.erode(dilated, kernel, iterations=2)
+    # Step 5: Remove small black dots using morphological opening
+    logging.info("Removing small black dots with morphological opening...")
+    small_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+    opened_mask = cv2.morphologyEx(adaptive_mask, cv2.MORPH_OPEN, small_kernel)
     if debug:
-        save_image(eroded, os.path.join(debug_dir, f"{inside_step}_morphology.png"))
+        save_image(opened_mask, os.path.join(debug_dir, f"{inside_step}_morph_opening.png"))
     inside_step += 1
 
-    # Step 6: Use the resulting image as a mask to fill in the whites of the image
+    # Step 6: Enlarge black regions using morphological closing
+    logging.info("Enlarging black regions with morphological closing...")
+    large_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
+    closed_mask = cv2.morphologyEx(opened_mask, cv2.MORPH_CLOSE, large_kernel)
+    if debug:
+        save_image(closed_mask, os.path.join(debug_dir, f"{inside_step}_morph_closing.png"))
+    final_mask = closed_mask
+    inside_step += 1
+
+    # Step 7: Use the resulting image as a mask to fill in the whites of the image
     logging.info("Filling in the whites of the image...")
-    filled_white = cv2.bitwise_and(cropped_image, cropped_image, mask=eroded)
-    inverted_mask = cv2.bitwise_not(eroded)
+    filled_white = cv2.bitwise_and(cropped_image, cropped_image, mask=final_mask)
+    inverted_mask = cv2.bitwise_not(final_mask)
     white_background = cv2.add(
         filled_white, cv2.cvtColor(inverted_mask, cv2.COLOR_GRAY2BGR)
     )
