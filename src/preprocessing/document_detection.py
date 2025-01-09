@@ -29,7 +29,7 @@ class DocumentDetector(Preprocessor):
 
         # Step 2: Threshold the lightness channel to isolate white areas
         # Adjust min value as needed
-        _, mask = cv2.threshold(l, 150, 255, cv2.THRESH_BINARY)
+        _, mask = cv2.threshold(l, 170, 255, cv2.THRESH_BINARY)
         self.save_debug_image(mask, f"{step_name}_white_mask", step_number)
 
         # Step 3: Apply morphological operations to consolidate white regions
@@ -48,14 +48,19 @@ class DocumentDetector(Preprocessor):
         # Step 5: Focus on the largest contour only
         largest_contour = contours[0]
 
+        # Draw the largest contour for debugging, with green
+        debug_image_contour = image.copy()
+        cv2.drawContours(debug_image_contour, [largest_contour], -1, (0, 255, 0), 3)
+        self.save_debug_image(debug_image_contour, f"{step_name}_largest_contour", step_number)
+
         # Fit a minimum area rectangle
         rect = cv2.minAreaRect(largest_contour)
         box = cv2.boxPoints(rect)  # Get four corners of the rectangle
         box = np.array(box, dtype=int)  # Convert to integer type
 
-        # Draw the rectangle for debugging
+        # Draw the rectangle for debugging, with green
         debug_image = image.copy()
-        cv2.drawContours(debug_image, [box], -1, (0, 255, 0), 2)  # Green rectangle
+        cv2.drawContours(debug_image, [box], -1, (0, 255, 0), 3)
         self.save_debug_image(debug_image, f"{step_name}_min_area_rect", step_number)
 
         # Refine the rectangle
