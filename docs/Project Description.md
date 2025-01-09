@@ -3,54 +3,98 @@
 ## **1. Purpose**
 
 The project aims to process images of handwritten or printed documents by enhancing text visibility and removing uneven
-backgrounds. This will address issues like uneven lighting and camera distortions, producing clean, readable outputs
-suitable for digitization and analysis.
+backgrounds. It addresses common issues like uneven lighting, camera distortions, and noise, producing clean, readable
+outputs suitable for digitization and analysis.
 
 ---
 
 ## **2. Main Functionalities**
 
-<INSTRUCTION>Here try to include everything we did to the images. Also detail the document detection in its own
-subsection, and then detail the rest into a separate subsection (2.1 and 2.2).</INSTRUCTION>
+### **2.1 Document Detection**
+
+- Detects the boundary of a document in an image, isolates it, and warps it to fit a standard A4 size.
+- Utilizes:
+    - **LAB color space conversion** to emphasize lightness.
+    - **Thresholding** and **morphological operations** to segment the document from the background.
+    - **Contour detection** to approximate the document boundary.
+    - **Perspective transformation** to correct skew and map the document to an A4 format.
+
+### **2.2 Text Enhancement and Highlighting**
+
+- Enhances the detected document by:
+    - **Noise reduction**: Smoothens the image to remove high-frequency noise.
+    - **Adaptive thresholding**: Dynamically segments the text and background.
+    - **Morphological processing**: Removes small noise and consolidates text regions.
+    - **Mask filling**: Fills background regions with white while optionally replacing text with Obsidian Black.
+    - **Text highlighting**: Detects and highlights text regions with bounding boxes, combining overlapping boxes for
+      clarity.
 
 ---
 
 ## **3. Implementation Details**
 
-<INSTRUCTION>Try to add missing stuff from here, especially maybe some details about the input and output, and maybe
-also rewrite it with better English.</INSTRUCTION>
-
-- **Languages and Tools**: Python 3.x with OpenCV and NumPy for image processing.
+- **Languages and Tools**:
+    - Python 3.x, with OpenCV for image processing and NumPy for numerical operations.
+- **Pipeline Components**:
+    - **Document detection**: Extracts and corrects the document perspective.
+    - **Preprocessing**: Noise reduction, color space conversion, adaptive thresholding, and morphological filtering.
+    - **Postprocessing**: Text enhancement, background removal, and highlighting.
 - **Input Requirements**:
     - Images captured via smartphone or scanner.
-    - Document fully visible, ideally A4 size, with a contrasting background.
-    - Adequate resolution (min 300 DPI for scans or 8 MP for photos).
+    - The document should be fully visible, ideally A4 size, with a contrasting background.
+    - Adequate resolution: 300 DPI for scans or 8 MP for photos.
     - Minimal skew or extreme angles.
-- **Output**: Cleaned, enhanced images with text highlighted and backgrounds removed, saved in grayscale. It also
-  highlights the text regions, and allows the user to choose if they want to have the text replaced with Obsidian Black,
-  or keep the original text color.
+- **Output**:
+    - Cleaned, enhanced images saved as PNG.
+    - Key Features:
+        - **Document Background Whitening**: Removes uneven white regions, replacing them with uniform white.
+        - **Text Highlighting**: Draws bounding boxes around detected text regions (`--highlight_text_regions`).
+        - **Text Blackening**: Option to replace text with Obsidian Black or preserve the original color
+          (`--force_black_text`).
 
 ---
 
 ## **4. Expected Outcome**
 
-<INSTRUCTION>Similarly, add anything missing, and improve the English</INSTRUCTION>
-
-- Improved text clarity.
-- Removal of uneven backgrounds.
-- Correct camera-induced skew.
-- Aligned, enhanced outputs suitable for digitization and archiving.
-- Black text for document-like stuff.
-- Highlighted text.
+- **Enhanced readability**: Sharper and clearer text for digitization and OCR.
+- **Document background whitening**: Removes uneven lighting and noise in white regions.
+- **Perspective correction**: Aligns documents to a standard A4 format.
+- **Text blackening**: Optionally replaces text with Obsidian Black for document-style clarity.
+- **Highlighting**: Text regions boxed for further analysis.
 
 ---
 
 ## **5. Contributions**
 
-<INSTRUCTION>Here you'll need to write for every feature I have and used (like if I used noise reduction, to mention it
-and mention my contribution and what libraries I used for it). Also categorize based on the document detection part and
-everything I used for that part, and also for the rest of the pipeline. And also write like possible improvements,
-contributions, libraries used, and issues I had with them.</INSTRUCTION>
+### **5.1 Document Detection**
+
+- **Features**:
+    - Converted images to LAB color space for better separation of lightness.
+    - Applied thresholding and morphological operations to isolate the document.
+    - Used contour detection to approximate the document boundary.
+    - Employed perspective transformation to correct skew.
+- **Libraries Used**:
+    - OpenCV: `cv2.cvtColor`, `cv2.threshold`, `cv2.findContours`, `cv2.getPerspectiveTransform`.
+- **Challenges**:
+    - Adaptive thresholding introduced excessive noise and was replaced with fixed thresholding.
+    - Non-quadrilateral contours required fallback mechanisms like minimum-area rectangles.
+- **Possible Improvements**:
+    - Implement machine learning for robust document boundary detection.
+
+### **5.2 Text Enhancement and Highlighting**
+
+- **Features**:
+    - **Noise reduction**: Applied Gaussian blur to smoothen images.
+    - **Adaptive thresholding**: Dynamically segmented text from the background.
+    - **Morphological processing**: Removed small dots and emphasized text.
+    - **Mask filling**: Allowed background removal and optional text replacement.
+    - **Text highlighting**: Used connected components analysis to draw bounding boxes and combined close regions.
+- **Libraries Used**:
+    - OpenCV: `cv2.GaussianBlur`, `cv2.adaptiveThreshold`, `cv2.morphologyEx`, `cv2.connectedComponentsWithStats`.
+- **Challenges**:
+    - Combining bounding boxes efficiently required custom merging logic.
+- **Possible Improvements**:
+    - Implement deep learning-based text detection for higher accuracy.
 
 ---
 
