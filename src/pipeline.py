@@ -4,7 +4,7 @@ import os
 import cv2
 
 from src.processing.document_detection import DocumentDetector
-from src.processing.rectangle_merger import combine_rectangles
+from src.utils.rectangle_merger import combine_rectangles
 from src.utils.io_operations import read_image, ensure_directory, save_image
 
 
