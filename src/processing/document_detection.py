@@ -3,7 +3,7 @@ import logging
 import cv2
 import numpy as np
 
-from src.preprocessing.base_preprocessor import Preprocessor
+from src.processing.base_preprocessor import Preprocessor
 
 
 class DocumentDetector(Preprocessor):

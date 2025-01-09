@@ -3,7 +3,8 @@ import os
 
 import cv2
 
-from src.preprocessing.document_detection import DocumentDetector
+from src.processing.document_detection import DocumentDetector
+from src.processing.rectangle_merger import combine_rectangles
 from src.utils.io_operations import read_image, ensure_directory, save_image
 
 
@@ -134,11 +135,12 @@ def process_image(
             inverted_mask, connectivity=8
         )
 
-        # Filtering parameters
-        min_area = 100  # Minimum area for text regions
-        max_area = 0.1 * inverted_mask.size  # Maximum area for text regions (10% of image)
+        # Filtering parameters (min and max area for text regions)
+        min_area = 100
+        max_area = 0.1 * inverted_mask.size
 
-        # Draw bounding boxes on the final image
+        # Collect all rectangles
+        rectangles = []
         for i in range(1, num_labels):  # Skip the background (label 0)
             x, y, w, h, area = (
                 stats[i, cv2.CC_STAT_LEFT],
@@ -150,8 +152,14 @@ def process_image(
 
             # Apply filtering criteria
             if min_area <= area <= max_area:
-                # Draw the bounding box on the blurred image
-                cv2.rectangle(highlighted, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                rectangles.append((x, y, w, h))
+
+        # Combine overlapping or close rectangles
+        combined_rectangles = combine_rectangles(rectangles, threshold=10)
+
+        # Draw the combined rectangles on the blurred image
+        for x, y, w, h in combined_rectangles:
+            cv2.rectangle(highlighted, (x, y), (x + w, y + h), (0, 255, 0), 2)
     if debug:
         save_image(
             highlighted, os.path.join(debug_dir, f"{inside_step}_highlighted.png")
