@@ -22,21 +22,29 @@ class DocumentDetector(Preprocessor):
         Returns:
             Warped image with an A4 aspect ratio.
         """
+        inside_step = 1
         # Step 1: Convert to LAB color space to separate light regions
         lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
         l, a, b = cv2.split(lab)
-        self.save_debug_image(l, f"{step_name}_lightness", step_number)
+        self.save_debug_image(l, f"{step_name}_{inside_step}_lightness", step_number)
+        inside_step += 1
 
         # Step 2: Threshold the lightness channel to isolate white areas
         # Adjust min value as needed
         _, mask = cv2.threshold(l, 150, 255, cv2.THRESH_BINARY)
-        self.save_debug_image(mask, f"{step_name}_white_mask", step_number)
+        self.save_debug_image(
+            mask, f"{step_name}_{inside_step}_white_mask", step_number
+        )
+        inside_step += 1
 
         # Step 3: Apply morphological operations to consolidate white regions
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
         dilated = cv2.dilate(mask, kernel, iterations=2)
         eroded = cv2.erode(dilated, kernel, iterations=2)
-        self.save_debug_image(eroded, f"{step_name}_morphology", step_number)
+        self.save_debug_image(
+            eroded, f"{step_name}_{inside_step}_morphology", step_number
+        )
+        inside_step += 1
 
         # Step 4: Find contours in the white mask
         contours, _ = cv2.findContours(
@@ -52,8 +60,11 @@ class DocumentDetector(Preprocessor):
         debug_image_contour = image.copy()
         cv2.drawContours(debug_image_contour, [largest_contour], -1, (0, 255, 0), 3)
         self.save_debug_image(
-            debug_image_contour, f"{step_name}_largest_contour", step_number
+            debug_image_contour,
+            f"{step_name}_{inside_step}_largest_contour",
+            step_number,
         )
+        inside_step += 1
 
         # Step 6: Approximate a quadrilateral from the contour
         perimeter = cv2.arcLength(largest_contour, True)
@@ -71,8 +82,11 @@ class DocumentDetector(Preprocessor):
         debug_image_quad = image.copy()
         cv2.drawContours(debug_image_quad, [np.int32(quad)], -1, (255, 0, 0), 3)
         self.save_debug_image(
-            debug_image_quad, f"{step_name}_approximated_quad", step_number
+            debug_image_quad,
+            f"{step_name}_{inside_step}_approximated_quad",
+            step_number,
         )
+        inside_step += 1
 
         # Step 7: Warp perspective using the approximated quadrilateral
         rect = self.order_points(quad)  # Order the points consistently
@@ -81,7 +95,7 @@ class DocumentDetector(Preprocessor):
         )
         matrix = cv2.getPerspectiveTransform(rect, dst)
         warped = cv2.warpPerspective(image, matrix, (2480, 3508))
-        self.save_debug_image(warped, f"{step_name}_warped", step_number)
+        self.save_debug_image(warped, f"{step_name}_{inside_step}_warped", step_number)
 
         return warped, rect
 
