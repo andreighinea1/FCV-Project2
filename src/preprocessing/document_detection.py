@@ -83,7 +83,7 @@ class DocumentDetector(Preprocessor):
         warped = cv2.warpPerspective(image, matrix, (2480, 3508))
         self.save_debug_image(warped, f"{step_name}_warped", step_number)
 
-        return warped
+        return warped, rect
 
     @staticmethod
     def order_points(pts):

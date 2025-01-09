@@ -29,41 +29,43 @@ def process_image(input_path, output_dir, debug=False):
     if debug:
         ensure_directory(debug_dir)
 
-    # Step 0: Document Detection
+    # Step 0: Document Detection (Cropped A4 Image)
     document_detector = DocumentDetector(debug=debug, debug_dir=debug_dir)
-    image = document_detector.detect_and_warp(
+    cropped_image, warping_rect = document_detector.detect_and_warp(
         image, step_number=0, step_name="document_detection"
     )
 
     # Step 1: Noise Reduction
     noise_reducer = NoiseReducer(debug=debug, debug_dir=debug_dir)
-    image = noise_reducer.apply_gaussian_blur(
-        image, step_number=1, step_name="noise_reduction"
+    cropped_image = noise_reducer.apply_gaussian_blur(
+        cropped_image, step_number=1, step_name="noise_reduction"
     )
 
     # Step 2: Contrast Adjustment
     contrast_adjuster = ContrastAdjuster(debug=debug, debug_dir=debug_dir)
-    image = contrast_adjuster.adjust_contrast(
-        image, step_number=2, step_name="contrast_adjustment"
+    cropped_image = contrast_adjuster.adjust_contrast(
+        cropped_image, step_number=2, step_name="contrast_adjustment"
     )
 
     # Step 3: Binarization
     binarizer = Binarizer(debug=debug, debug_dir=debug_dir)
-    image = binarizer.apply_threshold(image, step_number=3, step_name="binarization")
+    cropped_image = binarizer.apply_threshold(
+        cropped_image, step_number=3, step_name="binarization"
+    )
 
     # Step 4: Morphological Filtering
     morphological_filter = MorphologicalFilter(debug=debug, debug_dir=debug_dir)
-    image = morphological_filter.apply_morphology(
-        image, step_number=4, step_name="morphological_filtering"
+    cropped_image = morphological_filter.apply_morphology(
+        cropped_image, step_number=4, step_name="morphological_filtering"
     )
 
     # Step 5: Gradient Analysis
     gradient_analyzer = GradientAnalyzer(debug=debug, debug_dir=debug_dir)
-    image = gradient_analyzer.compute_gradients(
-        image, step_number=5, step_name="gradient_analysis"
+    cropped_image = gradient_analyzer.compute_gradients(
+        cropped_image, step_number=5, step_name="gradient_analysis"
     )
 
-    # Save the final processed image
-    final_output_path = os.path.join(output_dir, f"{image_name}_final_processed.png")
-    save_image(image, final_output_path)
-    logging.info(f"Final processed image saved at {final_output_path}")
+    # Save the processed cropped image
+    final_output_path = os.path.join(output_dir, f"{image_name}_processed_cropped.png")
+    save_image(cropped_image, final_output_path)
+    logging.info(f"Processed cropped image saved at {final_output_path}")
