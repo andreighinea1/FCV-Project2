@@ -1,12 +1,9 @@
 import logging
 import os
 
-from src.preprocessing.binarization import Binarizer
-from src.preprocessing.contrast_adjustment import ContrastAdjuster
+import cv2
+
 from src.preprocessing.document_detection import DocumentDetector
-from src.preprocessing.gradient_analysis import GradientAnalyzer
-from src.preprocessing.morphological_filtering import MorphologicalFilter
-from src.preprocessing.noise_reduction import NoiseReducer
 from src.utils.io_operations import read_image, ensure_directory, save_image
 
 
@@ -29,43 +26,52 @@ def process_image(input_path, output_dir, debug=False):
     if debug:
         ensure_directory(debug_dir)
 
-    # Step 0: Document Detection (Cropped A4 Image)
+    # Step 1: Document Detection (Cropped A4 Image)
     document_detector = DocumentDetector(debug=debug, debug_dir=debug_dir)
+    inside_step = 1
     cropped_image, warping_rect = document_detector.detect_and_warp(
-        image, step_number=0, step_name="document_detection"
+        image, step_number=inside_step, step_name="document_detection"
     )
+    inside_step += 1
 
-    # Step 1: Noise Reduction
-    noise_reducer = NoiseReducer(debug=debug, debug_dir=debug_dir)
-    cropped_image = noise_reducer.apply_gaussian_blur(
-        cropped_image, step_number=1, step_name="noise_reduction"
+    # Step 2: Convert to LAB color space to separate light regions
+    logging.info("Converting to LAB color space...")
+    lab = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2LAB)
+    l, a, b = cv2.split(lab)
+    if debug:
+        save_image(l, os.path.join(debug_dir, f"{inside_step}_lightness.png"))
+    inside_step += 1
+
+    # Step 3: Threshold the lightness channel to isolate white areas
+    logging.info("Thresholding the lightness channel...")
+    _, mask = cv2.threshold(l, 150, 255, cv2.THRESH_BINARY)
+    if debug:
+        save_image(mask, os.path.join(debug_dir, f"{inside_step}_white_mask.png"))
+    inside_step += 1
+
+    # Step 4: Apply morphological operations to consolidate white regions
+    logging.info("Applying morphological operations...")
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    dilated = cv2.dilate(mask, kernel, iterations=2)
+    eroded = cv2.erode(dilated, kernel, iterations=2)
+    if debug:
+        save_image(eroded, os.path.join(debug_dir, f"{inside_step}_morphology.png"))
+    inside_step += 1
+
+    # Step 5: Use the resulting image as a mask to fill in the whites of the image
+    logging.info("Filling in the whites of the image...")
+    filled_white = cv2.bitwise_and(cropped_image, cropped_image, mask=eroded)
+    inverted_mask = cv2.bitwise_not(eroded)
+    white_background = cv2.add(
+        filled_white, cv2.cvtColor(inverted_mask, cv2.COLOR_GRAY2BGR)
     )
+    if debug:
+        save_image(
+            white_background, os.path.join(debug_dir, f"{inside_step}_cleaned.png")
+        )
+    inside_step += 1
 
-    # Step 2: Contrast Adjustment
-    contrast_adjuster = ContrastAdjuster(debug=debug, debug_dir=debug_dir)
-    cropped_image = contrast_adjuster.adjust_contrast(
-        cropped_image, step_number=2, step_name="contrast_adjustment"
-    )
-
-    # Step 3: Binarization
-    binarizer = Binarizer(debug=debug, debug_dir=debug_dir)
-    cropped_image = binarizer.apply_threshold(
-        cropped_image, step_number=3, step_name="binarization"
-    )
-
-    # Step 4: Morphological Filtering
-    morphological_filter = MorphologicalFilter(debug=debug, debug_dir=debug_dir)
-    cropped_image = morphological_filter.apply_morphology(
-        cropped_image, step_number=4, step_name="morphological_filtering"
-    )
-
-    # Step 5: Gradient Analysis
-    gradient_analyzer = GradientAnalyzer(debug=debug, debug_dir=debug_dir)
-    cropped_image = gradient_analyzer.compute_gradients(
-        cropped_image, step_number=5, step_name="gradient_analysis"
-    )
-
-    # Save the processed cropped image
+    # Save the final result
     final_output_path = os.path.join(output_dir, f"{image_name}_processed_cropped.png")
-    save_image(cropped_image, final_output_path)
+    save_image(white_background, final_output_path)
     logging.info(f"Processed cropped image saved at {final_output_path}")
