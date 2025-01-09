@@ -34,7 +34,16 @@ def process_image(input_path, output_dir, debug=False):
     )
     inside_step += 1
 
-    # Step 2: Convert to LAB color space to separate light regions
+    # Step 2: Noise Reduction
+    logging.info("Applying noise reduction...")
+    cropped_image = cv2.GaussianBlur(cropped_image, (5, 5), 0)
+    if debug:
+        save_image(
+            cropped_image, os.path.join(debug_dir, f"{inside_step}_noise_reduction.png")
+        )
+    inside_step += 1
+
+    # Step 3: Convert to LAB color space to separate light regions
     logging.info("Converting to LAB color space...")
     lab = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2LAB)
     l, a, b = cv2.split(lab)
@@ -42,14 +51,14 @@ def process_image(input_path, output_dir, debug=False):
         save_image(l, os.path.join(debug_dir, f"{inside_step}_lightness.png"))
     inside_step += 1
 
-    # Step 3: Threshold the lightness channel to isolate white areas
+    # Step 4: Threshold the lightness channel to isolate white areas
     logging.info("Thresholding the lightness channel...")
     _, mask = cv2.threshold(l, 150, 255, cv2.THRESH_BINARY)
     if debug:
         save_image(mask, os.path.join(debug_dir, f"{inside_step}_white_mask.png"))
     inside_step += 1
 
-    # Step 4: Apply morphological operations to consolidate white regions
+    # Step 5: Apply morphological operations to consolidate white regions
     logging.info("Applying morphological operations...")
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
     dilated = cv2.dilate(mask, kernel, iterations=2)
@@ -58,7 +67,7 @@ def process_image(input_path, output_dir, debug=False):
         save_image(eroded, os.path.join(debug_dir, f"{inside_step}_morphology.png"))
     inside_step += 1
 
-    # Step 5: Use the resulting image as a mask to fill in the whites of the image
+    # Step 6: Use the resulting image as a mask to fill in the whites of the image
     logging.info("Filling in the whites of the image...")
     filled_white = cv2.bitwise_and(cropped_image, cropped_image, mask=eroded)
     inverted_mask = cv2.bitwise_not(eroded)
