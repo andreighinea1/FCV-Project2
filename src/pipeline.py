@@ -57,7 +57,9 @@ def process_image(input_path, output_dir, debug=False):
         l, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, blockSize=21, C=10
     )
     if debug:
-        save_image(adaptive_mask, os.path.join(debug_dir, f"{inside_step}_adaptive_mask.png"))
+        save_image(
+            adaptive_mask, os.path.join(debug_dir, f"{inside_step}_adaptive_mask.png")
+        )
     inside_step += 1
 
     # Step 5: Remove small black dots using morphological opening
@@ -65,7 +67,9 @@ def process_image(input_path, output_dir, debug=False):
     small_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
     opened_mask = cv2.morphologyEx(adaptive_mask, cv2.MORPH_OPEN, small_kernel)
     if debug:
-        save_image(opened_mask, os.path.join(debug_dir, f"{inside_step}_morph_opening.png"))
+        save_image(
+            opened_mask, os.path.join(debug_dir, f"{inside_step}_morph_opening.png")
+        )
     inside_step += 1
 
     # Step 6: Enlarge black regions using morphological closing
@@ -73,7 +77,9 @@ def process_image(input_path, output_dir, debug=False):
     large_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
     closed_mask = cv2.morphologyEx(opened_mask, cv2.MORPH_CLOSE, large_kernel)
     if debug:
-        save_image(closed_mask, os.path.join(debug_dir, f"{inside_step}_morph_closing.png"))
+        save_image(
+            closed_mask, os.path.join(debug_dir, f"{inside_step}_morph_closing.png")
+        )
     final_mask = closed_mask
     inside_step += 1
 
