@@ -37,6 +37,8 @@ class DocumentDetector(Preprocessor):
         )
         inside_step += 1
 
+        # Here I tried to use adaptive thresholding too, but it just didn't work...
+
         # Step 3: Apply morphological operations to consolidate white regions
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
         dilated = cv2.dilate(mask, kernel, iterations=2)

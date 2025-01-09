@@ -1,3 +1,5 @@
+import logging
+
 import cv2
 
 from src.processing.base_preprocessor import Preprocessor
@@ -19,8 +21,11 @@ class TextHighlighter(Preprocessor):
         self.threshold = threshold
 
     def apply(self, image, mask, step_number):
+        logging.info("Detecting and highlighting text regions...")
+
+        inverted_mask = cv2.bitwise_not(mask)
         num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(
-            mask, connectivity=8
+            inverted_mask, connectivity=8
         )
         rectangles = []
 
@@ -33,7 +38,7 @@ class TextHighlighter(Preprocessor):
                 stats[i, cv2.CC_STAT_AREA],
             )
 
-            if self.min_area <= area <= self.max_area_ratio * mask.size:
+            if self.min_area <= area <= self.max_area_ratio * inverted_mask.size:
                 rectangles.append((x, y, w, h))
 
         combined_rectangles = combine_rectangles(rectangles, self.threshold)

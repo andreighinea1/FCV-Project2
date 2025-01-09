@@ -1,3 +1,5 @@
+import logging
+
 import cv2
 
 from src.processing.base_preprocessor import Preprocessor
@@ -9,6 +11,7 @@ class NoiseReducer(Preprocessor):
         self.kernel_size = kernel_size
 
     def apply(self, image, step_number):
+        logging.info("Applying noise reduction...")
         blurred = cv2.GaussianBlur(image, self.kernel_size, 0)
         self.save_debug_image(blurred, "noise_reduction", step_number)
         return blurred
